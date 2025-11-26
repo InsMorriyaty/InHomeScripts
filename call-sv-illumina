@@ -1,0 +1,14 @@
+1. bam获取
+bwa比对、picard去除重复序列
+
+2. manta 
+singularity exec ~/software/manta_v1.6.0.sif configManta.py --bam S1.sort.markdup.bam --referenceFasta target.fa --runDir S1
+singularity exec ~/software/manta_v1.6.0.sif python S1/runWorkflow.py
+python3 MantaFilter.py S1
+在MantaFilterVcf文件夹中有所有个体的manta vcf， 如 S1.filter.vcf
+
+3. delly
+singularity exec ~/software/delly_v1.7.2.sif delly call -g target.fa -o S1.bcf S1.sort.markdup.bam  # S2 S3... Sn
+singularity exec ~/software/delly_v1.7.2.sif delly merge -o all.sites.bcf input.bcf.txt
+singularity exec ~/software/delly_v1.7.2.sif delly call -g target.fa -v all.sites.bcf -o S1.geno.bcf S1.sort.markdup.bam # S2 S3... Sn
+bcftools view S1.geno.bcf -O v > S1.vcf
