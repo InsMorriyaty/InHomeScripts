@@ -17,3 +17,9 @@ python3 DellyFilter.py S1
 4. smoove
 smoove call --name S1 --fasta target.fa  --genotype S1.sort.markdup.bam --outdir S1 # S2 S3... Sn
 smoove merge -name merge -fasta target.fa output/*.vcf.gz #把所有结果放在一个文件夹里
+smoove genotype -d -x -p 12 --name S1-joint --outdir results_genotyped --fasta target.fa --vcf merge.sites.vcf.gz S1.sort.markdup.bam # S2 S3... Sn
+python3 LumpyFilter.py S1 results_genotyped
+
+5. merge
+svimmer --threads 10 allfile.list Chrname  > merge.vcf
+graphtyper genotype_sv target.fa merge.vcf.gz --sams=bam.list --region=chr:start-end --threads=10
