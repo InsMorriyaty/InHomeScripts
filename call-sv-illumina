@@ -12,3 +12,8 @@ singularity exec ~/software/delly_v1.7.2.sif delly call -g target.fa -o S1.bcf S
 singularity exec ~/software/delly_v1.7.2.sif delly merge -o all.sites.bcf input.bcf.txt
 singularity exec ~/software/delly_v1.7.2.sif delly call -g target.fa -v all.sites.bcf -o S1.geno.bcf S1.sort.markdup.bam # S2 S3... Sn
 bcftools view S1.geno.bcf -O v > S1.vcf
+python3 DellyFilter.py S1
+
+4. smoove
+smoove call --name S1 --fasta target.fa  --genotype S1.sort.markdup.bam --outdir S1 # S2 S3... Sn
+smoove merge -name merge -fasta target.fa output/*.vcf.gz #把所有结果放在一个文件夹里
