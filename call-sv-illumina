@@ -23,3 +23,8 @@ python3 LumpyFilter.py S1 results_genotyped
 5. merge
 svimmer --threads 10 allfile.list Chrname  > merge.vcf
 graphtyper genotype_sv target.fa merge.vcf.gz --sams=bam.list --region=chr:start-end --threads=10
+####根据染色体合并
+
+6. filter
+python3 FinalFilter.py sv.vcf.gz > sv.filter.vcf
+vcftools --vcf sv.filter.vcf --max-missing 0.95 --recode --recode-INFO-all --out 
