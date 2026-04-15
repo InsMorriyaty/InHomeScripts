@@ -4,3 +4,22 @@
 下载PF02949，鳞翅目物种的OR序列，删除ORco序列
 结合三款软件预测跨膜次数，使用脚本进行过滤
 获取LeiOR_db.fasta LeiOR_db.hmm
+
+2. 基于gff + hmmer 的搜索
+./FilterOR.sh ${sp_name} ${genome} ${gff}
+${gff} : 保留最长转录本的gff
+
+3. 基于bitacora 搜索
+sh ./runBITACORA.sh ${sp_name} ${genome} ${gff} ${pep.fasta} ${7tm_db}
+
+4. 过滤、整合两种方法结果
+sh ./GetCombaineORseq.sh ${7tm_db}.genomic_and_annotated_proteins_trimmed_nr.fasta ${sp_name}_OR_Filter_Intermediate/${sp_name}.OR.Filter.stat ${sp_name}
+结果为： ${sp_name}.combainOR.pep.fa
+
+5. 基于nr库筛选or id
+blastp -query ${sp_name}.combainOR.pep.fa -db /database/nr/20250215/nr  -evalue 1e-5 -out ${sp_name}.combainOR.pep.fa.blast.output -max_target_seqs 5 -num_threads 16 -outfmt 6
+zcat /database/nr/20250215/nr.fasta.gz | grep "^>" > nr.seq.id
+python3 PraseSeqName.py ${sp_name}.combainOR.pep.fa.blast.output nr.seq.id [基于文件大小，拆分20000000行/文件]
+#合并 cat tmp/${sp_name}* | sort -k 1,1 > ${sp_name}.blast.id
+python3 SelectOR.py ${sp_name}.blast.id
+结果为：${sp_name}.notor.id  ${sp_name}.or.id 
