@@ -1,6 +1,1 @@
-########### gff+bitacora 注释物种OR序列 #############
 
-1. OR database 构建 
-下载PF02949，鳞翅目物种的OR序列，删除ORco序列
-结合三款软件预测跨膜次数，使用脚本进行过滤
-获取LeiOR_db.fasta LeiOR_db.hmm
