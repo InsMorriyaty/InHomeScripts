@@ -8,7 +8,7 @@ sp_name=$3
 cd ${sp_name}
 
 mkdir -p tmp
-
+#######phobius使用注意：需要去除蛋白序列后的*
 /home/u80010049/software/phobius/phobius.pl ${bitacora_fasta} > tmp/LeiOR.OR.phobius
 cat ${bitacora_fasta} | /home/u80010049/software/tmhmm-2.0c/bin/tmhmm > tmp/LeiOR.OR.tmhmm
 /home/u80010049/software/TMPred-master/build/TMPred ${bitacora_fasta} -o tmp/LeiOR.OR.tmpred
