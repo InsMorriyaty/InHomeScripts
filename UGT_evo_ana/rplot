@@ -1,0 +1,103 @@
+library(ggplot2)
+library(dplyr)
+
+data <- read.table("final.stat",header = F,col.names = c("species","class","cluster","value"))
+dt <- data %>% filter(class == "w")
+dt$cluster <- as.character(dt$cluster)
+
+ggplot(dt,aes(x = species, y = value )) + 
+  geom_boxplot(fill = "gray75",
+               color = "black",
+               outliers = FALSE) +
+  geom_jitter(size = 1.5) + 
+  scale_color_manual(values = og_color_vec, name = "SNAP-OG")+
+  ylim(0,0.5) +
+  theme_bw() + 
+  theme(
+    panel.grid.major.x = element_blank(),  # 去掉横向网格线
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11), # X轴物种名倾斜
+    axis.text.y = element_text(size = 11),
+    axis.title.y = element_text(size = 13)) +
+  labs(y = "dN/dS")+
+  guides(fill = "none")
+
+og_color_vec <- c(
+  "0" = "#0066BB",
+  "1" = "#B3D1F0",
+  "2" = "#FF7700",
+  "3" = "#FFC078",
+  "4" = "#009922",
+  "5" = "#77DD77",
+  "6" = "#E60000",
+  "7" = "#FF9999",
+  "8" = "#8855BB",
+  "9" = "#C9B8E0",
+  "10" = "#804838",
+  "11" = "#D8B8B0",
+  "12" = "#F254C8",
+  "13" = "#FFB8D8",
+  "14" = "#666666",
+  "15" = "#C8C8C8",
+  "16" = "#B4B000",
+  "17" = "#E0E0A0",
+  "18" = "#00C0C0",
+  "19" = "#96E0E6"
+)
+
+harm_sp = c("Ha96S","HaGR","HaSCD","HaUK")
+dt <- dt %>%
+  mutate(group = ifelse(species %in% harm_sp, "Harm group", "Other species"))
+harm_vals = dt %>% filter(group == "Harm group") %>% pull(value)
+other_vals = dt %>% filter(group == "Other species") %>% pull(value)
+wt = wilcox.test(x = harm_vals, y = other_vals, exact = FALSE)
+print(wt)
+
+
+sp_vec <- unique(dt$species)
+combn_mat <- combn(sp_vec, 2)
+n_comp <- ncol(combn_mat)
+
+# 存储结果
+test_res <- data.frame(
+  sp1 = character(n_comp),
+  sp2 = character(n_comp),
+  W_stat = numeric(n_comp),
+  P_raw = numeric(n_comp),
+  P_fdr = numeric(n_comp),
+  signif = character(n_comp),
+  stringsAsFactors = F
+)
+
+# 循环遍历每一对物种
+for(i in 1:n_comp){
+  s1 <- combn_mat[1,i]
+  s2 <- combn_mat[2,i]
+  v1 <- dt$value[dt$species == s1]
+  v2 <- dt$value[dt$species == s2]
+  
+  wt <- wilcox.test(v1, v2, exact = FALSE)
+  
+  test_res$sp1[i] <- s1
+  test_res$sp2[i] <- s2
+  test_res$W_stat[i] <- wt$statistic
+  test_res$P_raw[i] <- wt$p.value
+}
+new_row <- data.frame(sp1="gr1",sp2="gr2",W_stat=972,P_raw=0.001577,P_fdr=NA,signif="")
+j_row <- data.frame(sp1="gr1",sp2="gr3",W_stat=1302,P_raw=0.00142,P_fdr=NA,signif="")
+test_res <- rbind(test_res, new_row)
+test_res <- rbind(test_res, j_row)
+# FDR多重检验校正
+test_res$P_fdr <- p.adjust(test_res$P_raw, method = "BH")
+
+# 显著性标记函数
+get_star <- function(p){
+  if(p < 0.001) return("***")
+  else if(p < 0.01) return("**")
+  else if(p < 0.05) return("*")
+  else return("ns")
+}
+test_res$signif <- sapply(test_res$P_fdr, get_star)
+
+# 导出全部检验结果表格（可保存csv查看）
+write.csv(test_res, "pairwise_wilcoxon_FDR.csv", row.names = F)
